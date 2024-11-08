@@ -127,6 +127,7 @@ int check_sent(char *sent){
 
 int delete_555(char*** text, int size){
     int new_size = size;
+
     for(int i = 0; i < new_size; i++){
         char* sub_str_p = strstr((*text)[i], target_str);
         if(sub_str_p != NULL){
