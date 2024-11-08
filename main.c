@@ -5,10 +5,9 @@
 #define max(A, B) ((A) > (B) ? (A) : (B))
 #define DFLT_TEXT_SIZE 10
 #define DFLT_SENT_SIZE 50
-#define TARGET_STR_SIZE 5
 
 const char end_sent[] = "Dragon flew away!";
-char target_strs[TARGET_STR_SIZE][100] = {" 555 \0", "555\n\0",  " 555.\0", " 555;\0", " 555?\0"};
+char target_str[] = "555\0";
 
 
 int read_text(char ***text, int size);
@@ -23,6 +22,10 @@ int add_text_size(char ***text, int max_size);
 
 int delete_555(char*** text, int size);
 
+int is_letter(char a);
+
+void freeMem(char ***text, int from, int to);
+
 int main() {
     int size = DFLT_TEXT_SIZE;
     char **text = malloc(size * sizeof(char *));
@@ -36,7 +39,10 @@ int main() {
         text++;
         printf("\n");
     }
+
     printf("Количество предложений до %d и количество предложений после %d", (size-1), (new_size-1));
+    freeMem(&text, 0, new_size);
+    free(text);
 }
 
 int read_text(char ***global_text, int size) {
@@ -54,7 +60,7 @@ int read_text(char ***global_text, int size) {
 
         while(1){
             buffer = (char) getchar();
-            if(sent_size == 0 && (buffer == ' ' || buffer == '\n' || buffer == '\t')){ //удаление промежутков между предлож и переносов строк
+            if(sent_size == 0 && (buffer == ' ' || buffer == '\n' || buffer == '\t')){
                 continue;
             }
             if((sent_size+1) >= sent_max_size){
@@ -120,18 +126,33 @@ int check_sent(char *sent){
 }
 
 int delete_555(char*** text, int size){
-    for(int k = 0; k < TARGET_STR_SIZE; k++){
-//        printf("\t\tstr -%s\n", target_strs[k]);
-        for(int i = 0; i < size; i++){
-            char *sub_str_position = strstr((*text)[i], target_strs[k]);
-//            printf("sub_str -%s\n", sub_str_position);
-            if(sub_str_position){
-                for(int j = i+1; j < size; j++){
-                    (*text)[j-1] = (*text)[j];
-                }
-                size--;
+    int new_size = size;
+    for(int i = 0; i < new_size; i++){
+        char* sub_str_p = strstr((*text)[i], target_str);
+        if(sub_str_p != NULL){
+            if(( ((*text)[i] - sub_str_p) > 0 && is_letter(*(sub_str_p-1)) ) || ( (*(sub_str_p+3) != '\0' && is_letter(*(sub_str_p+3))) )){
+                continue;
             }
+            for(int j = i+1; j < new_size; j++){
+                (*text)[j-1] = (*text)[j];
+            }
+            new_size--;
+            i--;
         }
     }
-    return size;
+    freeMem(text, new_size+1, size);
+    return new_size;
+}
+
+int is_letter(char a){
+    if((a >= 65 && a <= 90) || (a >= 97 && a <= 122)){
+        return 1;
+    }
+    return 0;
+}
+
+void freeMem(char ***text, int from, int to){
+    for(int i = from; i < to; i++){
+        free((*text)[i]);
+    }
 }
